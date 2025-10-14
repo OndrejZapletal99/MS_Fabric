@@ -1,0 +1,1778 @@
+﻿
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Superstore - Best Practice Analysis</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            margin: 40px;
+            color: #333;
+        }
+        .header-container {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            align-items: center;
+            background: #4a5568;
+            color: #FFFFFF;
+            padding: 20px 30px;
+            margin: -40px -40px 40px -40px;
+            border-radius: 0;
+        }
+        .header-time {
+            font-size: 1.5em;
+            margin: 0;
+            font-weight: bold;
+            justify-self: start;
+        }
+        .header-title {
+            font-size: 2.5em;
+            margin: 0;
+            font-weight: bold;
+            justify-self: center;
+        }
+        .header-company {
+            font-size: 1.5em;
+            margin: 0;
+            font-weight: bold;
+            justify-self: end;
+        }
+        
+        /* Collapsible section styles */
+        .collapsible-section {
+            margin: 30px 0 20px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .section-header {
+            background-color: #718096;
+            color: #FFFFFF;
+            padding: 15px 20px;
+            margin: 0;
+            cursor: pointer;
+            font-size: 1.5em;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.3s ease;
+        }
+        
+        .section-header:hover {
+            background-color: #5a6370;
+        }
+        
+        .section-header .toggle-icon {
+            font-size: 1.2em;
+            font-weight: bold;
+            transition: transform 0.3s ease;
+        }
+        
+        .section-header.collapsed .toggle-icon {
+            transform: rotate(-90deg);
+        }
+        
+        .section-content {
+            padding: 20px;
+            background-color: #ffffff;
+            border-top: 1px solid #ddd;
+            display: block;
+            transition: all 0.3s ease;
+        }
+        
+        .section-content.collapsed {
+            display: none;
+        }
+        
+        /* Sub-collapsible section styles */
+        .sub-collapsible-section {
+            margin: 20px 0 15px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .sub-section-header {
+            background-color: #f8f9fa;
+            color: #495057;
+            padding: 12px 15px;
+            margin: 0;
+            cursor: pointer;
+            font-size: 1.2em;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.3s ease;
+            border-left: 4px solid #718096;
+        }
+        
+        .sub-section-header:hover {
+            background-color: #e9ecef;
+        }
+        
+        .sub-section-header .sub-toggle-icon {
+            font-size: 1em;
+            font-weight: bold;
+            transition: transform 0.3s ease;
+        }
+        
+        .sub-section-header.collapsed .sub-toggle-icon {
+            transform: rotate(-90deg);
+        }
+        
+        .sub-section-content {
+            padding: 15px;
+            background-color: #ffffff;
+            border-top: 1px solid #ccc;
+            display: block;
+            transition: all 0.3s ease;
+        }
+        
+        .sub-section-content.collapsed {
+            display: none;
+        }
+        
+        .summary-table {
+            width: 80%;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: 20px;
+            margin-bottom: 30px; 
+            border-collapse: collapse;
+        }
+        .summary-table th {
+            padding: 12px 15px;
+            border: 1px solid #e0e0e0;
+            background-color: #4a5568;
+            color: #FFFFFF;
+            font-weight: bold;
+            text-align: center;
+        }
+        .summary-table td {
+            padding: 12px 15px;
+            border: 1px solid #e0e0e0;
+            text-align: center;
+            background-color: #f9f9f9;
+        }
+        
+        .bpa-table {
+            width: 80%;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: 20px;
+            margin-bottom: 30px;
+            border-collapse: collapse;
+        }
+        .bpa-table th {
+            padding: 12px 15px;
+            border: 1px solid #e0e0e0;
+            background-color: #4a5568;
+            color: #FFFFFF;
+            font-weight: bold;
+            text-align: center;
+        }
+        .bpa-table td {
+            padding: 12px 15px;
+            border: 1px solid #e0e0e0;
+            text-align: left;
+        }
+        
+        .detail-table {
+            width: 95%;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: 20px;
+            margin-bottom: 30px;
+            border-collapse: collapse;
+        }
+        .detail-table th {
+            padding: 12px 15px;
+            border: 1px solid #e0e0e0;
+            background-color: #4a5568;
+            color: #FFFFFF;
+            font-weight: bold;
+            text-align: left;
+        }
+        .detail-table td {
+            padding: 12px 15px;
+            border: 1px solid #e0e0e0;
+            text-align: left;
+            vertical-align: top;
+        }
+        .detail-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+    </style>
+    <script>
+        function toggleSection(element) {
+            const content = element.nextElementSibling;
+            const icon = element.querySelector('.toggle-icon');
+            
+            if (content.classList.contains('collapsed')) {
+                content.classList.remove('collapsed');
+                element.classList.remove('collapsed');
+                icon.textContent = '▼';
+            } else {
+                content.classList.add('collapsed');
+                element.classList.add('collapsed');
+                icon.textContent = '▶';
+            }
+        }
+        
+        function toggleSubSection(element) {
+            const content = element.nextElementSibling;
+            const icon = element.querySelector('.sub-toggle-icon');
+            
+            if (content.classList.contains('collapsed')) {
+                content.classList.remove('collapsed');
+                element.classList.remove('collapsed');
+                icon.textContent = '▼';
+            } else {
+                content.classList.add('collapsed');
+                element.classList.add('collapsed');
+                icon.textContent = '▶';
+            }
+        }
+        
+        function expandAll() {
+            const headers = document.querySelectorAll('.section-header');
+            const contents = document.querySelectorAll('.section-content');
+            const icons = document.querySelectorAll('.toggle-icon');
+            const subHeaders = document.querySelectorAll('.sub-section-header');
+            const subContents = document.querySelectorAll('.sub-section-content');
+            const subIcons = document.querySelectorAll('.sub-toggle-icon');
+            
+            headers.forEach(header => header.classList.remove('collapsed'));
+            contents.forEach(content => content.classList.remove('collapsed'));
+            icons.forEach(icon => icon.textContent = '▼');
+            
+            subHeaders.forEach(header => header.classList.remove('collapsed'));
+            subContents.forEach(content => content.classList.remove('collapsed'));
+            subIcons.forEach(icon => icon.textContent = '▼');
+        }
+        
+        function collapseAll() {
+            const headers = document.querySelectorAll('.section-header');
+            const contents = document.querySelectorAll('.section-content');
+            const icons = document.querySelectorAll('.toggle-icon');
+            const subHeaders = document.querySelectorAll('.sub-section-header');
+            const subContents = document.querySelectorAll('.sub-section-content');
+            const subIcons = document.querySelectorAll('.sub-toggle-icon');
+            
+            headers.forEach(header => header.classList.add('collapsed'));
+            contents.forEach(content => content.classList.add('collapsed'));
+            icons.forEach(icon => icon.textContent = '▶');
+            
+            subHeaders.forEach(header => header.classList.add('collapsed'));
+            subContents.forEach(content => content.classList.add('collapsed'));
+            subIcons.forEach(icon => icon.textContent = '▶');
+        }
+    </script>
+</head>
+<body>
+
+    <div class="header-container">
+        <div class="header-time">14.10.2025</div>
+        <div class="header-title">Best Practice Analysis: "Superstore"</div>
+        <div class="header-company"></div>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin: 20px 0;">
+        <button onclick="collapseAll()" style="background-color: #6c757d; color: white; border: none; padding: 10px 20px; margin: 5px; border-radius: 5px; cursor: pointer;">Collapse All</button>
+        <button onclick="expandAll()" style="background-color: #718096; color: white; border: none; padding: 10px 20px; margin: 5px; border-radius: 5px; cursor: pointer;">Expand All</button>
+    </div>
+
+    <!-- Chapter 1: Semantic Model Info and Summary -->
+    <div class="collapsible-section">
+        <div class="section-header collapsed" onclick="toggleSection(this)">
+            Chapter 1: Best Practice Analysis Summary
+            <span class="toggle-icon">▶</span>
+        </div>
+        <div class="section-content collapsed">
+            
+            <!-- Subchapter 1.1: Semantic Model Info -->
+            <div class="sub-collapsible-section">
+                <div class="sub-section-header collapsed" onclick="toggleSubSection(this)">
+                    1.1 Semantic Model Info
+                    <span class="sub-toggle-icon">▶</span>
+                </div>
+                <div class="sub-section-content collapsed">
+                    <table class="summary-table">
+                        <thead>
+                            <tr>
+                                <th>Workspace</th>
+                                <th>Configured By</th>
+                                <th>Last Change</th>
+                                <th>Created By</th>
+                                <th>Created</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Production_Environment</td>
+                                <td>john.doe@example.com</td>
+                                <td>28.09.2025</td>
+                                <td>john.doe@example.com</td>
+                                <td>19.09.2025</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <table class="summary-table">
+                        <thead>
+                            <tr>
+                                <th>Total Tables</th>
+                                <th>Total Columns</th>
+                                <th>Total Measures</th>
+                                <th>Model Size</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>4</td>
+                                <td>48</td>
+                                <td>26</td>
+                                <td>3.31 MB</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Subchapter 1.2: Best Practice Analysis Summary -->
+            <div class="sub-collapsible-section">
+                <div class="sub-section-header collapsed" onclick="toggleSubSection(this)">
+                    1.2 Overall Summary by Severity
+                    <span class="sub-toggle-icon">▶</span>
+                </div>
+                <div class="sub-section-content collapsed">
+                    <p style="text-align: center; margin-bottom: 15px; font-size: 1.1em;">
+                        The table below shows the count of broken rules by category and severity level.<br>
+                        <strong>Severity levels:</strong> 1 (lowest) to 5 (highest) - Color intensity indicates severity.
+                    </p>
+                    <table class="bpa-table">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Severity 1</th>
+                                <th>Severity 2</th>
+                                <th>Severity 3</th>
+                                <th>Severity 4</th>
+                                <th>Severity 5</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td style='text-align: left; font-weight: bold;'>Formatting</td><td style='background-color: #ffcccc; color: black; font-weight: bold;'>32</td><td style='background-color: #ff9999; color: black; font-weight: bold;'>13</td><td style='background-color: #ff6666; color: black; font-weight: bold;'>1</td><td style='background-color: #ff3333; color: white; font-weight: bold;'>0</td><td style='background-color: #cc0000; color: white; font-weight: bold;'>0</td></tr>
+<tr><td style='text-align: left; font-weight: bold;'>Maintenance</td><td style='background-color: #ffcccc; color: black; font-weight: bold;'>72</td><td style='background-color: #ff9999; color: black; font-weight: bold;'>0</td><td style='background-color: #ff6666; color: black; font-weight: bold;'>0</td><td style='background-color: #ff3333; color: white; font-weight: bold;'>0</td><td style='background-color: #cc0000; color: white; font-weight: bold;'>0</td></tr>
+<tr><td style='text-align: left; font-weight: bold;'>Performance</td><td style='background-color: #ffcccc; color: black; font-weight: bold;'>0</td><td style='background-color: #ff9999; color: black; font-weight: bold;'>19</td><td style='background-color: #ff6666; color: black; font-weight: bold;'>2</td><td style='background-color: #ff3333; color: white; font-weight: bold;'>0</td><td style='background-color: #cc0000; color: white; font-weight: bold;'>0</td></tr>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- Chapter 2: Severity 5 Details -->
+    <div class="collapsible-section">
+        <div class="section-header collapsed" onclick="toggleSection(this)">
+            Chapter 2: Severity 5 - Detailed Breakdown
+            <span class="toggle-icon">▶</span>
+        </div>
+        <div class="section-content collapsed">
+            <p style="margin-bottom: 20px; font-size: 1.1em;">
+                This section contains all issues with <strong>Severity 5 (Critical Priority)</strong>.
+            </p>
+            <table class="detail-table">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Rule</th>
+                        <th>Object Type</th>
+                        <th>Object Name</th>
+                        <th>Description</th>
+                        <th style="text-align: center;">URL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan='6' style='text-align: center; font-style: italic;'>No issues found for Severity 5</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Chapter 3: Severity 4 Details -->
+    <div class="collapsible-section">
+        <div class="section-header collapsed" onclick="toggleSection(this)">
+            Chapter 3: Severity 4 - Detailed Breakdown
+            <span class="toggle-icon">▶</span>
+        </div>
+        <div class="section-content collapsed">
+            <p style="margin-bottom: 20px; font-size: 1.1em;">
+                This section contains all issues with <strong>Severity 4 (High Priority)</strong>.
+            </p>
+            <table class="detail-table">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Rule</th>
+                        <th>Object Type</th>
+                        <th>Object Name</th>
+                        <th>Description</th>
+                        <th style="text-align: center;">URL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan='6' style='text-align: center; font-style: italic;'>No issues found for Severity 4</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Chapter 4: Severity 3 Details -->
+    <div class="collapsible-section">
+        <div class="section-header collapsed" onclick="toggleSection(this)">
+            Chapter 4: Severity 3 - Detailed Breakdown
+            <span class="toggle-icon">▶</span>
+        </div>
+        <div class="section-content collapsed">
+            <p style="margin-bottom: 20px; font-size: 1.1em;">
+                This section contains all issues with <strong>Severity 3 (Medium Priority)</strong>.
+            </p>
+            <table class="detail-table">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Rule</th>
+                        <th>Object Type</th>
+                        <th>Object Name</th>
+                        <th>Description</th>
+                        <th style="text-align: center;">URL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+        <tr>
+            <td>Performance</td>
+            <td>Date/calendar tables should be marked as a date table</td>
+            <td>Table</td>
+            <td>Calendar table</td>
+            <td>This rule looks for tables that contain the words 'date' or 'calendar' as they should likely be marked as a date table.</td>
+            <td style='text-align: center;'><a href='https://docs.microsoft.com/power-bi/transform-model/desktop-date-tables' target='_blank' style='color: #4a5568; text-decoration: none;'>🔗 URL</a></td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Objects should not start or end with a space</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Sales without discount ]</td>
+            <td>Objects should not start or end with a space. This usually happens by accident and is difficult to find.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Performance</td>
+            <td>Model should have a date table</td>
+            <td>Model</td>
+            <td>Model</td>
+            <td>Generally speaking, models should generally have a date table. Models that do not have a date table generally are not taking advantage of features such as time intelligence or may not have a properly structured architecture.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Chapter 5: Severity 2 Details -->
+    <div class="collapsible-section">
+        <div class="section-header collapsed" onclick="toggleSection(this)">
+            Chapter 5: Severity 2 - Detailed Breakdown
+            <span class="toggle-icon">▶</span>
+        </div>
+        <div class="section-content collapsed">
+            <p style="margin-bottom: 20px; font-size: 1.1em;">
+                This section contains all issues with <strong>Severity 2 (Low Priority)</strong>.
+            </p>
+            <table class="detail-table">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Rule</th>
+                        <th>Object Type</th>
+                        <th>Object Name</th>
+                        <th>Description</th>
+                        <th style="text-align: center;">URL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+        <tr>
+            <td>Performance</td>
+            <td>Set IsAvailableInMdx to false on non-attribute columns</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Date INT]</td>
+            <td>To speed up processing time and conserve memory after processing, attribute hierarchies should not be built for columns that are never used for slicing by MDX clients. In other words, all hidden columns that are not used as a Sort By Column or referenced in user hierarchies should have their IsAvailableInMdx property set to false. The IsAvailableInMdx property is not relevant for Direct Lake models.</td>
+            <td style='text-align: center;'><a href='https://blog.crossjoin.co.uk/2018/07/02/isavailableinmdx-ssas-tabular' target='_blank' style='color: #4a5568; text-decoration: none;'>🔗 URL</a></td>
+        </tr>
+        
+        <tr>
+            <td>Performance</td>
+            <td>Set IsAvailableInMdx to false on non-attribute columns</td>
+            <td>Column</td>
+            <td>'Calendar table'[Date INT]</td>
+            <td>To speed up processing time and conserve memory after processing, attribute hierarchies should not be built for columns that are never used for slicing by MDX clients. In other words, all hidden columns that are not used as a Sort By Column or referenced in user hierarchies should have their IsAvailableInMdx property set to false. The IsAvailableInMdx property is not relevant for Direct Lake models.</td>
+            <td style='text-align: center;'><a href='https://blog.crossjoin.co.uk/2018/07/02/isavailableinmdx-ssas-tabular' target='_blank' style='color: #4a5568; text-decoration: none;'>🔗 URL</a></td>
+        </tr>
+        
+        <tr>
+            <td>Performance</td>
+            <td>Avoid using calculated columns</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Date INT]</td>
+            <td>Calculated columns do not compress as well as data columns so they take up more memory. They also slow down processing times for both the table as well as process recalc. Offload calculated column logic to your data warehouse and turn these calculated columns into data columns.</td>
+            <td style='text-align: center;'><a href='https://www.elegantbi.com/post/top10bestpractices' target='_blank' style='color: #4a5568; text-decoration: none;'>🔗 URL</a></td>
+        </tr>
+        
+        <tr>
+            <td>Performance</td>
+            <td>Avoid using calculated columns</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Date diff]</td>
+            <td>Calculated columns do not compress as well as data columns so they take up more memory. They also slow down processing times for both the table as well as process recalc. Offload calculated column logic to your data warehouse and turn these calculated columns into data columns.</td>
+            <td style='text-align: center;'><a href='https://www.elegantbi.com/post/top10bestpractices' target='_blank' style='color: #4a5568; text-decoration: none;'>🔗 URL</a></td>
+        </tr>
+        
+        <tr>
+            <td>Performance</td>
+            <td>Avoid using calculated columns</td>
+            <td>Column</td>
+            <td>'Calendar table'[Date INT]</td>
+            <td>Calculated columns do not compress as well as data columns so they take up more memory. They also slow down processing times for both the table as well as process recalc. Offload calculated column logic to your data warehouse and turn these calculated columns into data columns.</td>
+            <td style='text-align: center;'><a href='https://www.elegantbi.com/post/top10bestpractices' target='_blank' style='color: #4a5568; text-decoration: none;'>🔗 URL</a></td>
+        </tr>
+        
+        <tr>
+            <td>Performance</td>
+            <td>Avoid using calculated columns</td>
+            <td>Column</td>
+            <td>'Calendar table'[IsPast]</td>
+            <td>Calculated columns do not compress as well as data columns so they take up more memory. They also slow down processing times for both the table as well as process recalc. Offload calculated column logic to your data warehouse and turn these calculated columns into data columns.</td>
+            <td style='text-align: center;'><a href='https://www.elegantbi.com/post/top10bestpractices' target='_blank' style='color: #4a5568; text-decoration: none;'>🔗 URL</a></td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Provide format string for 'Date' columns</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Order Date]</td>
+            <td>Columns of type "DateTime" that have "Date" in their names should be formatted.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Provide format string for 'Date' columns</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Ship Date]</td>
+            <td>Columns of type "DateTime" that have "Date" in their names should be formatted.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Provide format string for 'Date' columns</td>
+            <td>Column</td>
+            <td>'Calendar table'[Date]</td>
+            <td>Columns of type "DateTime" that have "Date" in their names should be formatted.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Do not summarize numeric columns</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Profit without discount]</td>
+            <td>Numeric columns (integer, decimal, double) should have their SummarizeBy property set to "None" to avoid accidental summation in Power BI (create measures instead).</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Do not summarize numeric columns</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Price per PC without discount]</td>
+            <td>Numeric columns (integer, decimal, double) should have their SummarizeBy property set to "None" to avoid accidental summation in Power BI (create measures instead).</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Do not summarize numeric columns</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Price per PC with discount]</td>
+            <td>Numeric columns (integer, decimal, double) should have their SummarizeBy property set to "None" to avoid accidental summation in Power BI (create measures instead).</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Do not summarize numeric columns</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Sales without discount ]</td>
+            <td>Numeric columns (integer, decimal, double) should have their SummarizeBy property set to "None" to avoid accidental summation in Power BI (create measures instead).</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Do not summarize numeric columns</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Cost per PC with discount]</td>
+            <td>Numeric columns (integer, decimal, double) should have their SummarizeBy property set to "None" to avoid accidental summation in Power BI (create measures instead).</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Do not summarize numeric columns</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Cost per PC without discount]</td>
+            <td>Numeric columns (integer, decimal, double) should have their SummarizeBy property set to "None" to avoid accidental summation in Power BI (create measures instead).</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Do not summarize numeric columns</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Discout per PC in USD]</td>
+            <td>Numeric columns (integer, decimal, double) should have their SummarizeBy property set to "None" to avoid accidental summation in Power BI (create measures instead).</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Do not summarize numeric columns</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Total Cost with discount]</td>
+            <td>Numeric columns (integer, decimal, double) should have their SummarizeBy property set to "None" to avoid accidental summation in Power BI (create measures instead).</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Do not summarize numeric columns</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Total cost without discount]</td>
+            <td>Numeric columns (integer, decimal, double) should have their SummarizeBy property set to "None" to avoid accidental summation in Power BI (create measures instead).</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Do not summarize numeric columns</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Date diff]</td>
+            <td>Numeric columns (integer, decimal, double) should have their SummarizeBy property set to "None" to avoid accidental summation in Power BI (create measures instead).</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Performance</td>
+            <td>Reduce usage of calculated tables</td>
+            <td>Table</td>
+            <td>Calendar table</td>
+            <td>Migrate calculated table logic to your data warehouse. Reliance on calculated tables will lead to technical debt and potential misalignments if you have multiple models on your platform.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Performance</td>
+            <td>Do not use floating point data types</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Sales with discount]</td>
+            <td>The "Double" floating point data type should be avoided, as it can result in unpredictable roundoff errors and decreased performance in certain scenarios. Use "Int64" or "Decimal" where appropriate (but note that "Decimal" is limited to 4 digits after the decimal sign).</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Performance</td>
+            <td>Do not use floating point data types</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Discount]</td>
+            <td>The "Double" floating point data type should be avoided, as it can result in unpredictable roundoff errors and decreased performance in certain scenarios. Use "Int64" or "Decimal" where appropriate (but note that "Decimal" is limited to 4 digits after the decimal sign).</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Performance</td>
+            <td>Do not use floating point data types</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Profit with discount]</td>
+            <td>The "Double" floating point data type should be avoided, as it can result in unpredictable roundoff errors and decreased performance in certain scenarios. Use "Int64" or "Decimal" where appropriate (but note that "Decimal" is limited to 4 digits after the decimal sign).</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Performance</td>
+            <td>Do not use floating point data types</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Profit without discount]</td>
+            <td>The "Double" floating point data type should be avoided, as it can result in unpredictable roundoff errors and decreased performance in certain scenarios. Use "Int64" or "Decimal" where appropriate (but note that "Decimal" is limited to 4 digits after the decimal sign).</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Performance</td>
+            <td>Do not use floating point data types</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Price per PC without discount]</td>
+            <td>The "Double" floating point data type should be avoided, as it can result in unpredictable roundoff errors and decreased performance in certain scenarios. Use "Int64" or "Decimal" where appropriate (but note that "Decimal" is limited to 4 digits after the decimal sign).</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Performance</td>
+            <td>Do not use floating point data types</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Price per PC with discount]</td>
+            <td>The "Double" floating point data type should be avoided, as it can result in unpredictable roundoff errors and decreased performance in certain scenarios. Use "Int64" or "Decimal" where appropriate (but note that "Decimal" is limited to 4 digits after the decimal sign).</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Performance</td>
+            <td>Do not use floating point data types</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Sales without discount ]</td>
+            <td>The "Double" floating point data type should be avoided, as it can result in unpredictable roundoff errors and decreased performance in certain scenarios. Use "Int64" or "Decimal" where appropriate (but note that "Decimal" is limited to 4 digits after the decimal sign).</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Performance</td>
+            <td>Do not use floating point data types</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Cost per PC with discount]</td>
+            <td>The "Double" floating point data type should be avoided, as it can result in unpredictable roundoff errors and decreased performance in certain scenarios. Use "Int64" or "Decimal" where appropriate (but note that "Decimal" is limited to 4 digits after the decimal sign).</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Performance</td>
+            <td>Do not use floating point data types</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Cost per PC without discount]</td>
+            <td>The "Double" floating point data type should be avoided, as it can result in unpredictable roundoff errors and decreased performance in certain scenarios. Use "Int64" or "Decimal" where appropriate (but note that "Decimal" is limited to 4 digits after the decimal sign).</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Performance</td>
+            <td>Do not use floating point data types</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Discout per PC in USD]</td>
+            <td>The "Double" floating point data type should be avoided, as it can result in unpredictable roundoff errors and decreased performance in certain scenarios. Use "Int64" or "Decimal" where appropriate (but note that "Decimal" is limited to 4 digits after the decimal sign).</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Performance</td>
+            <td>Do not use floating point data types</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Total Cost with discount]</td>
+            <td>The "Double" floating point data type should be avoided, as it can result in unpredictable roundoff errors and decreased performance in certain scenarios. Use "Int64" or "Decimal" where appropriate (but note that "Decimal" is limited to 4 digits after the decimal sign).</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Performance</td>
+            <td>Do not use floating point data types</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Total cost without discount]</td>
+            <td>The "Double" floating point data type should be avoided, as it can result in unpredictable roundoff errors and decreased performance in certain scenarios. Use "Int64" or "Decimal" where appropriate (but note that "Decimal" is limited to 4 digits after the decimal sign).</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Chapter 6: Severity 1 Details -->
+    <div class="collapsible-section">
+        <div class="section-header collapsed" onclick="toggleSection(this)">
+            Chapter 6: Severity 1 - Detailed Breakdown
+            <span class="toggle-icon">▶</span>
+        </div>
+        <div class="section-content collapsed">
+            <p style="margin-bottom: 20px; font-size: 1.1em;">
+                This section contains all issues with <strong>Severity 1 (Lowest Priority)</strong>.
+            </p>
+            <table class="detail-table">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Rule</th>
+                        <th>Object Type</th>
+                        <th>Object Name</th>
+                        <th>Description</th>
+                        <th style="text-align: center;">URL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+        <tr>
+            <td>Formatting</td>
+            <td>Add data category for columns</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Country]</td>
+            <td>Add Data Category property for appropriate columns.</td>
+            <td style='text-align: center;'><a href='https://docs.microsoft.com/power-bi/transform-model/desktop-data-categorization' target='_blank' style='color: #4a5568; text-decoration: none;'>🔗 URL</a></td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Add data category for columns</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[City]</td>
+            <td>Add Data Category property for appropriate columns.</td>
+            <td style='text-align: center;'><a href='https://docs.microsoft.com/power-bi/transform-model/desktop-data-categorization' target='_blank' style='color: #4a5568; text-decoration: none;'>🔗 URL</a></td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Percentages should be formatted with thousands separators and 1 decimal</td>
+            <td>Measure</td>
+            <td># GM with discount</td>
+            <td>For a better user experience, percengage measures should be formatted with a '%' sign.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Percentages should be formatted with thousands separators and 1 decimal</td>
+            <td>Measure</td>
+            <td># GM with discount AY</td>
+            <td>For a better user experience, percengage measures should be formatted with a '%' sign.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Percentages should be formatted with thousands separators and 1 decimal</td>
+            <td>Measure</td>
+            <td># GM with discount PY</td>
+            <td>For a better user experience, percengage measures should be formatted with a '%' sign.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Percentages should be formatted with thousands separators and 1 decimal</td>
+            <td>Measure</td>
+            <td># GM with discount PY YTD</td>
+            <td>For a better user experience, percengage measures should be formatted with a '%' sign.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Percentages should be formatted with thousands separators and 1 decimal</td>
+            <td>Measure</td>
+            <td>% Sales delta AY-PY YTD</td>
+            <td>For a better user experience, percengage measures should be formatted with a '%' sign.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Percentages should be formatted with thousands separators and 1 decimal</td>
+            <td>Measure</td>
+            <td>% GM delta AY-PY YTD</td>
+            <td>For a better user experience, percengage measures should be formatted with a '%' sign.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Percentages should be formatted with thousands separators and 1 decimal</td>
+            <td>Measure</td>
+            <td>% Quantity delta AY-PY YTD</td>
+            <td>For a better user experience, percengage measures should be formatted with a '%' sign.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Percentages should be formatted with thousands separators and 1 decimal</td>
+            <td>Measure</td>
+            <td>% DateDif delta AY-PY YTD</td>
+            <td>For a better user experience, percengage measures should be formatted with a '%' sign.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Percentages should be formatted with thousands separators and 1 decimal</td>
+            <td>Measure</td>
+            <td>% Profit delta AY-PY YTD</td>
+            <td>For a better user experience, percengage measures should be formatted with a '%' sign.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Provide format string for measures</td>
+            <td>Measure</td>
+            <td># Profit with discount</td>
+            <td>Visible measures should have their format string property assigned.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Provide format string for measures</td>
+            <td>Measure</td>
+            <td># DateDif AY</td>
+            <td>Visible measures should have their format string property assigned.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Provide format string for measures</td>
+            <td>Measure</td>
+            <td># Profit with discount AY</td>
+            <td>Visible measures should have their format string property assigned.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Provide format string for measures</td>
+            <td>Measure</td>
+            <td># Profit with discount PY</td>
+            <td>Visible measures should have their format string property assigned.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Provide format string for measures</td>
+            <td>Measure</td>
+            <td># Profit with discount PY YTD</td>
+            <td>Visible measures should have their format string property assigned.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Whole numbers should be formatted with thousands separators and no decimals</td>
+            <td>Measure</td>
+            <td># Profit with discount</td>
+            <td>For a better user experience, whole numbers should be formatted with commas.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Whole numbers should be formatted with thousands separators and no decimals</td>
+            <td>Measure</td>
+            <td># Quantity</td>
+            <td>For a better user experience, whole numbers should be formatted with commas.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Whole numbers should be formatted with thousands separators and no decimals</td>
+            <td>Measure</td>
+            <td># Total costs with discount</td>
+            <td>For a better user experience, whole numbers should be formatted with commas.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Whole numbers should be formatted with thousands separators and no decimals</td>
+            <td>Measure</td>
+            <td>#Date dif</td>
+            <td>For a better user experience, whole numbers should be formatted with commas.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Whole numbers should be formatted with thousands separators and no decimals</td>
+            <td>Measure</td>
+            <td># Quantity AY</td>
+            <td>For a better user experience, whole numbers should be formatted with commas.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Whole numbers should be formatted with thousands separators and no decimals</td>
+            <td>Measure</td>
+            <td># Sales with discount PY</td>
+            <td>For a better user experience, whole numbers should be formatted with commas.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Whole numbers should be formatted with thousands separators and no decimals</td>
+            <td>Measure</td>
+            <td># Quantity  PY</td>
+            <td>For a better user experience, whole numbers should be formatted with commas.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Whole numbers should be formatted with thousands separators and no decimals</td>
+            <td>Measure</td>
+            <td># Sales with discount PY YTD</td>
+            <td>For a better user experience, whole numbers should be formatted with commas.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Whole numbers should be formatted with thousands separators and no decimals</td>
+            <td>Measure</td>
+            <td># Quantity PY YTD</td>
+            <td>For a better user experience, whole numbers should be formatted with commas.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Whole numbers should be formatted with thousands separators and no decimals</td>
+            <td>Measure</td>
+            <td># DateDif AY</td>
+            <td>For a better user experience, whole numbers should be formatted with commas.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Whole numbers should be formatted with thousands separators and no decimals</td>
+            <td>Measure</td>
+            <td># DateDif PY</td>
+            <td>For a better user experience, whole numbers should be formatted with commas.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Whole numbers should be formatted with thousands separators and no decimals</td>
+            <td>Measure</td>
+            <td># DateDif  PY YTD</td>
+            <td>For a better user experience, whole numbers should be formatted with commas.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Whole numbers should be formatted with thousands separators and no decimals</td>
+            <td>Measure</td>
+            <td># Profit with discount AY</td>
+            <td>For a better user experience, whole numbers should be formatted with commas.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Whole numbers should be formatted with thousands separators and no decimals</td>
+            <td>Measure</td>
+            <td># Profit with discount PY</td>
+            <td>For a better user experience, whole numbers should be formatted with commas.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Whole numbers should be formatted with thousands separators and no decimals</td>
+            <td>Measure</td>
+            <td># Profit with discount PY YTD</td>
+            <td>For a better user experience, whole numbers should be formatted with commas.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Formatting</td>
+            <td>Mark primary keys</td>
+            <td>Column</td>
+            <td>'Calendar table'[Date INT]</td>
+            <td>Set the 'Key' property to 'True' for primary key columns within the column properties.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Ensure tables have relationships</td>
+            <td>Table</td>
+            <td>Table of Measures</td>
+            <td>This rule highlights tables which are not connected to any other table in the model with a relationship.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Ensure tables have relationships</td>
+            <td>Table</td>
+            <td>Dynamic Small multiples</td>
+            <td>This rule highlights tables which are not connected to any other table in the model with a relationship.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Order ID]</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Order Date]</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Ship Date]</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Ship Mode]</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Customer ID]</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Customer Name]</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Segment]</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Country]</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[City]</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[State]</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Postal Code]</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Region]</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Product ID]</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Category]</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Sub-Category]</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Product Name]</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Sales with discount]</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Quantity]</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Discount]</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Profit with discount]</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Profit without discount]</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Price per PC without discount]</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Price per PC with discount]</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Sales without discount ]</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Cost per PC with discount]</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Cost per PC without discount]</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Discout per PC in USD]</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Total Cost with discount]</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Total cost without discount]</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Column</td>
+            <td>'Sample - Superstore'[Date diff]</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Column</td>
+            <td>'Calendar table'[Date]</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Column</td>
+            <td>'Calendar table'[Year]</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Column</td>
+            <td>'Calendar table'[Month]</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Column</td>
+            <td>'Calendar table'[Month number]</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Column</td>
+            <td>'Calendar table'[Calendar quarter]</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Column</td>
+            <td>'Calendar table'[Calendar week]</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Column</td>
+            <td>'Calendar table'[Day number]</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Column</td>
+            <td>'Calendar table'[Day]</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Column</td>
+            <td>'Calendar table'[IsPast]</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Column</td>
+            <td>'Dynamic Small multiples'[Dynamic Small multiples]</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Table</td>
+            <td>Sample - Superstore</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Table</td>
+            <td>Calendar table</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Table</td>
+            <td>Table of Measures</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Table</td>
+            <td>Dynamic Small multiples</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Measure</td>
+            <td># Profit with discount</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Measure</td>
+            <td># Sales with discount</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Measure</td>
+            <td># Quantity</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Measure</td>
+            <td># Total costs with discount</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Measure</td>
+            <td>#Date dif</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Measure</td>
+            <td># GM with discount</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Measure</td>
+            <td># GM with discount AY</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Measure</td>
+            <td># Sales with discount AY</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Measure</td>
+            <td># Quantity AY</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Measure</td>
+            <td># GM with discount PY</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Measure</td>
+            <td># GM with discount PY YTD</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Measure</td>
+            <td># Sales with discount PY</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Measure</td>
+            <td># Quantity  PY</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Measure</td>
+            <td># Sales with discount PY YTD</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Measure</td>
+            <td># Quantity PY YTD</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Measure</td>
+            <td># DateDif AY</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Measure</td>
+            <td># DateDif PY</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Measure</td>
+            <td># DateDif  PY YTD</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Measure</td>
+            <td># Profit with discount AY</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Measure</td>
+            <td># Profit with discount PY</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Measure</td>
+            <td># Profit with discount PY YTD</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Measure</td>
+            <td>% Sales delta AY-PY YTD</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Measure</td>
+            <td>% GM delta AY-PY YTD</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Measure</td>
+            <td>% Quantity delta AY-PY YTD</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Measure</td>
+            <td>% DateDif delta AY-PY YTD</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+        <tr>
+            <td>Maintenance</td>
+            <td>Visible objects with no description</td>
+            <td>Measure</td>
+            <td>% Profit delta AY-PY YTD</td>
+            <td>Add descriptions to objects. These descriptions are shown on hover within the Field List in Power BI Desktop. Additionally, you can leverage these descriptions to create an automated data dictionary.</td>
+            <td style='text-align: center;'>N/A</td>
+        </tr>
+        
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</body>
+</html>
+
+
+
+
